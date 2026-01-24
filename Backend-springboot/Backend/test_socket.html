@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <title>Chat STOMP Tester</title>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- Development version -->
+    <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.js"></script>
+
+    <!-- Production version -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .box { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        button { cursor: pointer; padding: 5px 10px; }
+        #log { background: #f0f0f0; border: 1px solid #999; height: 300px; overflow: auto; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<h2>🛠️ Công cụ Test Socket Chat</h2>
+
+<div class="box">
+    <h3>1. Kết nối</h3>
+    <label>URL:</label>
+    <input type="text" id="url" value="ws://localhost:8080/ws" size="50">
+    <button onclick="connect()">🔌 Connect</button>
+    <button onclick="disconnect()" disabled id="btnDisconnect">❌ Disconnect</button>
+    <div id="status" style="margin-top:5px; color:red">Status: Disconnected</div>
+</div>
+
+<div class="box">
+    <h3>2. Gửi trạng thái (Client -> Server)</h3>
+    <label>Destination:</label>
+    <input type="text" id="destination" value="/app/message.delivered"><br><br>
+    <label>JSON Body:</label><br>
+    <textarea id="jsonBody" rows="5" cols="50">
+{
+  "messageId": 123,
+  "conversationId": 1,
+  "status": "DELIVERED"
+}</textarea><br>
+    <button onclick="send()" id="btnSend" disabled>📤 Gửi (Send)</button>
+</div>
+
+<div class="box">
+    <h3>3. Log (Server phản hồi)</h3>
+    <div id="log"></div>
+</div>
+
+<script>
+    var stompClient = null;
+
+    function log(message) {
+        var logDiv = document.getElementById('log');
+        var p = document.createElement('p');
+        p.style.wordWrap = 'break-word';
+        p.appendChild(document.createTextNode(message));
+        logDiv.appendChild(p);
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function connect() {
+        var url = document.getElementById('url').value;
+        // Vì bạn đã tắt SockJS trong config Java, ta dùng Stomp.client(url) trực tiếp
+        stompClient = Stomp.client(url);
+
+        log("dang ket noi den " + url + "...");
+
+        stompClient.connect({}, function (frame) {
+            document.getElementById('status').innerHTML = 'Status: Connected ✅';
+            document.getElementById('status').style.color = 'green';
+            document.getElementById('btnDisconnect').disabled = false;
+            document.getElementById('btnSend').disabled = false;
+
+            log('Connected: ' + frame);
+
+            // TỰ ĐỘNG SUBSCRIBE vào queue status để nghe phản hồi
+            // Lưu ý: Nếu có Security, bạn cần login.
+            // Nếu test local không authen, Server nên gửi về /topic/public-status để dễ test
+            stompClient.subscribe('/user/queue/status', function (greeting) {
+                log('📩 NHẬN ĐƯỢC PHẢN HỒI: ' + greeting.body);
+            });
+
+            // Subscribe thêm topic lỗi để debug
+            stompClient.subscribe('/user/queue/errors', function (msg) {
+                log('❌ ERROR: ' + msg.body);
+            });
+
+        }, function (error) {
+            log('❌ Lỗi kết nối: ' + error);
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        document.getElementById('status').innerHTML = 'Status: Disconnected';
+        document.getElementById('status').style.color = 'red';
+        document.getElementById('btnDisconnect').disabled = true;
+        document.getElementById('btnSend').disabled = true;
+        log("Disconnected");
+    }
+
+    function send() {
+        var destination = document.getElementById('destination').value;
+        var body = document.getElementById('jsonBody').value;
+
+        try {
+            stompClient.send(destination, {}, body);
+            log("⬆️ Đã gửi tới " + destination + ": " + body);
+        } catch (e) {
+            log("❌ Lỗi gửi tin: " + e);
+        }
+    }
+</script>
+</body>
+</html>
