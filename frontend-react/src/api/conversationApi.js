@@ -1,6 +1,7 @@
 import axiosClient from "./axiosClient";
 
-export const openPrivateConversation = (targetUserId) =>
-  axiosClient.post("/conversations/private", {
-    targetUserId,
-  });
+export const openPrivateConversation = (currentUserId, body) =>
+    axiosClient.post(`/conversations/private?currentUserId=${currentUserId}`,body)
+
+export const getAllConversation = (currentUserId) =>
+    axiosClient.get(`/conversations?currentUserId=${currentUserId}`)
