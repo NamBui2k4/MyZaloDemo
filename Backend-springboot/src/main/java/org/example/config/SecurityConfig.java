@@ -12,30 +12,26 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                // ❌ Tắt CSRF (API, Postman, Swagger)
                 .csrf(csrf -> csrf.disable())
-
-                // ❌ Tắt Basic Auth (nguyên nhân Swagger hỏi username/password)
                 .httpBasic(httpBasic -> httpBasic.disable())
-
-                // ❌ Tắt form login
                 .formLogin(form -> form.disable())
-
-                // ✅ Cho phép truy cập tự do
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/swagger-ui/**",           // Cho phép tất cả dưới /swagger-ui/
-                                "/v3/api-docs/**",          // OpenAPI docs
-                                "/auth/**"                  // endpoint auth của bạn
+                                "/",
+                                "/index.html",
+                                "/test_socket.html", // Cho phép trực tiếp file này
+                                "/static/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/ws/**",            // Cho phép kết nối WebSocket
+                                "/auth/**"
                         ).permitAll()
-                        .anyRequest().permitAll()       // hoặc .authenticated() nếu muốn bảo vệ
+                        .anyRequest().permitAll()
                 );
 
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

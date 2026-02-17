@@ -3,8 +3,10 @@ package org.example.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -89,5 +91,36 @@ public class GlobalExceptionHandler {
                         "METHOD_NOT_ALLOWED",
                         detail
                 ));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> RequestParameterHandler(
+            MissingServletRequestParameterException e
+    ){
+        String detail = "\uD83D\uDD25 Query param error: " + e.getMessage();
+        log.error(detail);
+        return ResponseEntity.status(
+                HttpStatus.NOT_ACCEPTABLE
+        ).body(
+                new ErrorResponse(
+                        "NOT_ACCEPTABLE",
+                        detail
+                )
+        );
+    }
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> RequestParameterhandler(
+            MethodArgumentTypeMismatchException e
+    ){
+        String detail = "\uD83D\uDD25 API error: " + e.getMessage();
+        log.error(detail);
+        return ResponseEntity.status(
+                HttpStatus.NOT_ACCEPTABLE
+        ).body(
+                new ErrorResponse(
+                        "NOT_ACCEPTABLE",
+                        detail
+                )
+        );
     }
 }

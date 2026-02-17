@@ -7,6 +7,8 @@ import org.example.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -15,7 +17,7 @@ public class UserController {
     private final UserService userService;
 
     /* ========= CREATE ========= */
-    @PostMapping()
+    @PostMapping("/create")
     public User createUser(@RequestBody User user) {
         System.out.println("Received user: " + user);  // Log để xem body có map được không
         return userService.createUser(user);
@@ -26,6 +28,9 @@ public class UserController {
     public User getUser(@PathVariable Integer id) {
         return userService.getUserById(id);
     }
+
+    @GetMapping("/all")
+    public List<User> getAllUser(){return  userService.getAllUser();};
 
     @GetMapping("/phone/{phone}")
     public User getByPhone(@PathVariable String phone) {

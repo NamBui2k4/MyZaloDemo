@@ -2,7 +2,9 @@ package org.example.service;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.example.dto.socket.MessageStatusDTO;
 import org.example.entity.*;
+import org.example.exception.EntityNotFoundException;
 import org.example.repository.MessageRepository;
 import org.example.repository.MessageStatusRepository;
 import org.example.repository.UserRepository;
@@ -18,7 +20,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class ChatService {
+public class MessageService {
     private final MessageRepository messageRepo;
     private final MessageStatusRepository messageStatusRepository;
     private final ConversationRepository conversationRepository;
@@ -85,81 +87,64 @@ public class ChatService {
                 );
     }
 
-    @Transactional
-    public Conversation createOrGetPrivateConversation(Integer currentUserId, Integer targetUserId) {
-        if (currentUserId.equals(targetUserId)) {
-            throw new IllegalArgumentException("Cannot chat with yourself");
-        }
-
-        // 1️⃣ Check target user tồn tại
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new RuntimeException("Current user not found"));
-
-        User targetUser = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new RuntimeException("Target user not found"));
-
-        // 2️⃣ Tìm conversation đã tồn tại
-        var existingConversation =
-                participantRepository.findPrivateConversation(
-                        currentUserId,
-                        targetUserId
-                );
-
-        if (existingConversation.isPresent()) {
-            return (Conversation) existingConversation.get();
-        }
-
-        // 3️⃣ Chưa có → tạo mới
-        Conversation conversation = new Conversation();
-        Conversation savedConversation =
-                conversationRepository.save(conversation);
-
-        participantRepository.save(
-                Participant.builder()
-                        .conversation(savedConversation)
-                        .user(currentUser)
-                        .build()
-        );
-
-        participantRepository.save(
-                Participant.builder()
-                        .conversation(savedConversation)
-                        .user(targetUser)
-                        .build()
-        );
-
-        return savedConversation;
-    }
 
     @Transactional
-    public MessageStatus markAsDelivered(Integer messageId, Integer receiverId ) {
+    public MessageStatusDTO markAsDelivered(Integer messageId, Integer receiverId ) {
         // Tìm status tương ứng (bạn có thể cần tìm theo cả userId người nhận để chính xác)
-        MessageStatus status = messageStatusRepository.findByMessageIdAndReceiverId(messageId, receiverId) // Giả sử lấy được current user
-                .orElseThrow(() -> new RuntimeException("Status not found"));
+        MessageStatus ms = messageStatusRepository.findByMessageIdAndReceiverId(messageId, receiverId) // Giả sử lấy được current user
+                .orElseThrow(() -> new EntityNotFoundException("Status not found"));
 
-        if (status.getStatus() == MessageStatus.MessageReceiptStatus.SENT) {
-            status.setStatus(MessageStatus.MessageReceiptStatus.DELIVERED);
-            status.setReceiveTime(Instant.now()); // LÚC NÀY MỚI SET TIME
+
+        if (ms.getStatus() != MessageStatus.MessageReceiptStatus.SENT) {
+            throw new IllegalStateException(
+                    "Cannot mark as DELIVERED from state " + ms.getStatus()
+            );
         }
-        return messageStatusRepository.save(status);
+
+        ms.setStatus(MessageStatus.MessageReceiptStatus.DELIVERED);
+        ms.setReceiveTime(Instant.now());
+
+        return new MessageStatusDTO(
+                ms.getMessage().getMessageId(),
+                ms.getMessage().getSender().getUserId(),
+                ms.getStatus(),
+                ms.getReceiveTime()
+        );
     }
 
+
     @Transactional
-    public MessageStatus markAsSeen(Integer messageId, Integer receiverId) {
-        MessageStatus status = messageStatusRepository.findByMessageIdAndReceiverId(messageId, receiverId)
+    public MessageStatusDTO markAsSeen(Integer messageId, Integer receiverId) {
+
+        MessageStatus ms = messageStatusRepository.findByMessageIdAndReceiverId(messageId, receiverId)
                 .orElseThrow(() -> new RuntimeException("Status not found"));
 
-        // Chỉ update nếu chưa seen
-        if (status.getStatus() != MessageStatus.MessageReceiptStatus.SEEN) {
-            status.setStatus(MessageStatus.MessageReceiptStatus.SEEN);
-            status.setSeenTime(Instant.now()); // LÚC NÀY MỚI SET TIME
-
-            // Nếu chưa có receive time (trường hợp mở xem luôn mà bỏ qua bước delivered)
-            if (status.getReceiveTime() == null) {
-                status.setReceiveTime(Instant.now());
+        switch (ms.getStatus()){
+            case DELIVERED -> {
+                ms.setStatus(MessageStatus.MessageReceiptStatus.SEEN);
+                ms.setSeenTime(Instant.now()); // LÚC NÀY MỚI SET TIME
+                // Nếu chưa có receive time (trường hợp mở xem luôn mà bỏ qua bước delivered)
+                if (ms.getReceiveTime() == null) {
+                    ms.setReceiveTime(Instant.now());
+                }
+            }
+            case SEEN -> {
+                // nếu "đã xem" thì không làm gì
+            }
+            default -> {
+                throw new IllegalStateException(
+                        "Cannot mark SEEN from state" + ms.getStatus()
+                );
             }
         }
-        return messageStatusRepository.save(status);
+
+
+        return new MessageStatusDTO(
+                ms.getMessage().getMessageId(),
+                ms.getMessage().getSender().getUserId(),
+                ms.getStatus(),
+                ms.getReceiveTime()
+        );
     }
 
     @Transactional

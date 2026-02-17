@@ -8,6 +8,9 @@ import org.example.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.example.exception.UserNotFoundException;
+
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService{
@@ -29,7 +32,10 @@ public class UserService{
     public User getUserById(Integer id ){
         return userRepo.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-    }
+    };
+    public List<User> getAllUser(){
+        return userRepo.findAll();
+    };
 
     public User getByPhone(String phone) {
         return userRepo.findByPhone(phone)

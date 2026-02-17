@@ -1,5 +1,6 @@
 package org.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import jakarta.persistence.*;
@@ -29,13 +30,14 @@ public class Conversation {
     @CreationTimestamp
     private Instant createAt;
 
-
     /* === RELATIONS === */
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "conversation")
+    @JsonManagedReference
     private List<Participant> listParticipant;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "conversation")
+    @JsonManagedReference
     private List<Message> listMessage;
 
 

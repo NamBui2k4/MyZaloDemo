@@ -39,11 +39,12 @@ public class MessageStatus {
     private Message message;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "receiver_id")
     @MapsId("userId")
     private User receiver;
 
-    @Column(name = "status", nullable = false, columnDefinition = "varchar(10)")
+    @Column(name = "status", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
     private MessageReceiptStatus status;
     // SENT, RECEIVED, SEEN
 
