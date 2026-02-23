@@ -35,14 +35,15 @@
 <div class="box">
     <h3>2. Gửi trạng thái (Client -> Server)</h3>
     <label>Destination:</label>
-    <input type="text" id="destination" value="/app/message.delivered"><br><br>
+    <input type="text" id="destination" value="/app/chat.sendMessage"><br><br>
     <label>JSON Body:</label><br>
     <textarea id="jsonBody" rows="5" cols="50">
 {
-  "messageId": 123,
-  "conversationId": 1,
-  "status": "DELIVERED"
-}</textarea><br>
+	"conversationId": 1,
+	"content": "Hello!",
+	"senderId": 1
+}
+    </textarea><br>
     <button onclick="send()" id="btnSend" disabled>📤 Gửi (Send)</button>
 </div>
 
@@ -81,7 +82,7 @@
             // TỰ ĐỘNG SUBSCRIBE vào queue status để nghe phản hồi
             // Lưu ý: Nếu có Security, bạn cần login.
             // Nếu test local không authen, Server nên gửi về /topic/public-status để dễ test
-            stompClient.subscribe('/user/queue/status', function (greeting) {
+            stompClient.subscribe('/topic/status', function (greeting) {
                 log('📩 NHẬN ĐƯỢC PHẢN HỒI: ' + greeting.body);
             });
 

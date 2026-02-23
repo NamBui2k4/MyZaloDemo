@@ -1,14 +1,14 @@
 import { useState, useContext } from "react";
 import { login as loginApi } from "../api/authApi";
 import { AuthContext } from "../context/AuthContext";
-
+import { useNavigate } from "react-router-dom"; // 
 import "./login.css";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useContext(AuthContext);
-
+  const navigate = useNavigate();
   const handleLogin = async () => {
     if (!phone || !password) {
       alert("Please enter phone and password");
@@ -17,7 +17,9 @@ export default function LoginPage() {
 
     try {
       const res = await loginApi({ phone, password });
-      login(res.data.user, res.data.token);
+      console.log("Dữ liệu nhận được:", res.data);
+      login(res.data.userResponseDTO, res.data.token);
+      navigate("/chat");
     } catch (err) {
       alert("Login failed");
     }

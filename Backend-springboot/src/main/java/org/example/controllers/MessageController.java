@@ -11,6 +11,7 @@ import org.example.service.ConversationService;
 import org.example.service.MessageService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -32,11 +33,8 @@ public class MessageController {
 
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload SendMessageRequest dto, StompPrincipal principal) {
-//        User currentUser = userRepository
-//                .findByName(principal.getName())
-//                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Integer senderId = 1;
+        Integer senderId = Integer.parseInt(principal.getName());
         Integer conversationId = dto.getConversationId();
         String content = dto.getContent();
 
@@ -49,7 +47,7 @@ public class MessageController {
         System.out.println(message.getContent());
 
         messagingTemplate.convertAndSend(
-                "/topic/conversations/" + dto.getConversationId(),
+                "/topic/conversations." + dto.getConversationId(),
                 message
         );
     }
@@ -68,14 +66,14 @@ public class MessageController {
         System.out.println(currentUserId);
 
         // Gọi Service update DB
-        MessageStatusDTO dto = messageService.markAsDelivered(payload.getMessageId(), currentUserId);
+        MessageStatusDTO msDTO = messageService.markAsDelivered(payload.getMessageId(), currentUserId);
 
         // Báo lại cho Người Gửi (A) biết là B đã nhận
         // Gửi vào topic riêng của người gửi: /user/{senderId}/queue/status
         messagingTemplate.convertAndSendToUser(
-                dto.getSenderId().toString(),
+                msDTO.getSenderId().toString(), // Chỉnh lại ở đây
                 "/queue/status",
-                dto
+                msDTO
         );
     }
 

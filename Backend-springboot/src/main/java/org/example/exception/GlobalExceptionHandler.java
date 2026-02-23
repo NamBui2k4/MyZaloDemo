@@ -112,7 +112,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> RequestParameterhandler(
             MethodArgumentTypeMismatchException e
     ){
-        String detail = "\uD83D\uDD25 API error: " + e.getMessage();
+        String detail = "\uD83D\uDD25 API error: " + e.getRootCause();
         log.error(detail);
         return ResponseEntity.status(
                 HttpStatus.NOT_ACCEPTABLE

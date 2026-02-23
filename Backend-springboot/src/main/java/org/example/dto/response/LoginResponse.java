@@ -1,12 +1,14 @@
 package org.example.dto.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AuthResponse {
+@Builder
+public class LoginResponse {
     private String token;
-    private Integer userId;
-    private String phone;
+    private UserResponseDTO userResponseDTO;
 }
+

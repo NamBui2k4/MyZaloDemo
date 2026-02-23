@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
+
+@Data
 public class MessageResponse {
     private Integer messageId;
     private Integer senderId;

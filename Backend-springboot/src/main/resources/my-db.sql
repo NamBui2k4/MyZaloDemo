@@ -67,7 +67,7 @@ CREATE TABLE participant (
 -- Bảng Message_Status
 CREATE TABLE message_status (
     message_id INT,
-    user_id INT,
+    receive_id INT,
     recieve_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     seen_time TIMESTAMP,
     sent_time TIMESTAMP,

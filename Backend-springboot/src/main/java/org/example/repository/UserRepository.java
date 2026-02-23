@@ -1,7 +1,10 @@
 package org.example.repository;
 
+import jakarta.transaction.Transactional;
 import org.example.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,5 +17,15 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
     Optional<User> findByName(String name);
+
+    @Query("""
+            SELECT u FROM User u
+            WHERE u.email =:email AND u.phone =:phone
+            """)
+    Optional<User> findByEmail_Phone(
+            String email,
+            String phone
+    );
+
 }
 

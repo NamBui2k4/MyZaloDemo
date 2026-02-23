@@ -21,18 +21,18 @@ public interface MessageStatusRepository
             Integer userId
     );
 
-//    @Query("""
-//    SELECT ms
-//    FROM MessageStatus ms
-//    JOIN FETCH ms.message m
-//    JOIN FETCH m.sender
-//    WHERE m.id = :messageId
-//      AND ms.receiver.userId = :receiverId
-//""")
-//    Optional<MessageStatus> findForDelivery(
-//            @Param("messageId") Integer messageId,
-//            @Param("receiverId") Integer receiverId
-//    );
+        @Query("""
+        SELECT ms
+        FROM MessageStatus ms
+        JOIN FETCH ms.message m
+        JOIN FETCH m.sender
+        WHERE m.id = :messageId
+          AND ms.receiver.userId = :receiverId
+    """)
+        Optional<MessageStatus> findForDelivery(
+                @Param("messageId") Integer messageId,
+                @Param("receiverId") Integer receiverId
+        );
 
     long countByMessage_MessageIdAndStatus(
             Integer messageId,

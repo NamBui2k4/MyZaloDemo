@@ -1,0 +1,67 @@
+# Bỏ dòng version vì Docker Compose V2 đã tự động nhận diện
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dev_chat_app}
+      # Lưu ý: Nếu dùng biến môi trường cho User/Pass, hãy đảm bảo chúng tồn tại trong .env
+      MYSQL_USER: ${MYSQL_DB_USER:-chatuser}
+      MYSQL_PASSWORD: ${MYSQL_DB_PASSWORD:-password123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: my-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "61613:61613"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    command: sh -c "rabbitmq-plugins enable rabbitmq_stomp && rabbitmq-server"
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
+  chat-app:
+    build:
+      context: ./Backend-springboot
+      dockerfile: Dockerfile
+    container_name: chat-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-dev_chat_app}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+# ĐÂY LÀ PHẦN BỊ THIẾU KHIẾN BẠN GẶP LỖI "undefined volume"
+volumes:
+  mysql_data:
+  rabbitmq_data:

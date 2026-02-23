@@ -51,7 +51,7 @@ public class MessageStatus {
     @Column(name = "sent_time")
     private Instant sentTime;
 
-    @Column(name = "recieve_time")
+    @Column(name = "receive_time")
     private Instant receiveTime;
 
     @Column(name = "seen_time")

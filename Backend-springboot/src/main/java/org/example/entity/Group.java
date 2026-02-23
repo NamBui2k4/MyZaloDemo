@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder
 @Entity
-@Table(name = "user_group")
+@Table(name = "`group`")
 @DiscriminatorValue("GROUP")
 @PrimaryKeyJoinColumn(name = "group_id")
 public class Group extends Conversation {

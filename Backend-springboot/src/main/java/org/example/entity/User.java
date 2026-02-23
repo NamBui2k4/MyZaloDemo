@@ -36,7 +36,7 @@ public class User {
     private String phone;
 
     @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    private String password;
 
     @Column(name = "hide_last_seen", nullable = false)
     private Boolean hideLastSeen;

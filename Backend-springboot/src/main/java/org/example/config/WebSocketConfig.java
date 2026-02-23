@@ -22,10 +22,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         this.interceptor = interceptor;
     }
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic", "/queue");
-        config.setApplicationDestinationPrefixes("/app");
-        config.setUserDestinationPrefix("/user");
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.enableStompBrokerRelay("/topic", "/queue")  // relay đến RabbitMQ
+                .setRelayHost("rabbitmq")
+                .setRelayPort(61613)  // STOMP port của RabbitMQ plugin
+                .setClientLogin("guest")
+                .setClientPasscode("guest")
+                .setSystemLogin("guest")
+                .setSystemPasscode("guest");
+        registry.setApplicationDestinationPrefixes("/app");
     }
 
     @Override

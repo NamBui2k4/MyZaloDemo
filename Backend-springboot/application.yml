@@ -2,11 +2,25 @@ server:
   port: 8080
 
 spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
   datasource:
-    url: jdbc:mysql://localhost:3306/chat_app
+    url: jdbc:mysql://mysql:3306/dev_chat_app?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#    thay localhost bằng mysql nếu chạy bằng docker
     username: chatuser
     password: password123
-
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  rabbitmq:
+      host: rabbitmq
+      port: 5672
+      username: guest
+      password: guest
   jpa:
     hibernate:
       ddl-auto:  validate
@@ -14,7 +28,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+        dialect: org.hibernate.dialect.MySQLDialect`
   logging:
     level:
       root: INFO
@@ -22,3 +36,32 @@ spring:
       org.springframework.web: INFO
       org.hibernate.SQL: DEBUG
       org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://prod-db-host:3306/prod_chat_app?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC   # DB prod
+    username: ${PROD_DB_USER}     # Dùng env var cho prod (không hardcode)
+    password: ${PROD_DB_PASS}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  rabbitmq:
+    host: ${PROD_RABBITMQ_HOST}
+    port: 5672
+    username: ${PROD_RABBITMQ_USER}
+    password: ${PROD_RABBITMQ_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect`
+  logging:
+    level:
+      root: INFO
+      org.example: INFO
+      org.springframework.web: INFO
+      org.hibernate.SQL: INFO

@@ -1,7 +1,9 @@
 package org.example.controllers;
 
+import org.example.dto.response.UserResponseDTO;
+import org.example.dto.request.RegisterRequest;
 import org.example.dto.request.UpdateProfileRequest;
-import org.example.dto.response.UserProfileResponse;
+import org.example.dto.response.ProfileResponse;
 import org.example.entity.User;
 import org.example.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,47 +20,110 @@ public class UserController {
 
     /* ========= CREATE ========= */
     @PostMapping("/create")
-    public User createUser(@RequestBody User user) {
-        System.out.println("Received user: " + user);  // Log để xem body có map được không
-        return userService.createUser(user);
+    public UserResponseDTO createUser(@RequestBody RegisterRequest dto) {
+        User user = userService.createUser(dto);
+
+        return UserResponseDTO.builder()
+                .userId(user.getUserId())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
+                .name(user.getName())
+                .build();
     }
 
     /* ========= READ ========= */
     @GetMapping("/{id}")
-    public User getUser(@PathVariable Integer id) {
-        return userService.getUserById(id);
+    public UserResponseDTO getUser(@PathVariable Integer id) {
+        User user = userService.getUserById(id);
+        return UserResponseDTO.builder()
+                .userId(user.getUserId())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
+                .name(user.getName())
+                .build();
     }
 
     @GetMapping("/all")
     public List<User> getAllUser(){return  userService.getAllUser();};
 
     @GetMapping("/phone/{phone}")
-    public User getByPhone(@PathVariable String phone) {
-        return userService.getByPhone(phone);
+    public UserResponseDTO getByPhone(@PathVariable String phone) {
+        User user = userService.getByPhone(phone);
+        return UserResponseDTO.builder()
+                .userId(user.getUserId())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
+                .name(user.getName())
+                .build();
     }
 
     /* ========= UPDATE ========= */
     @GetMapping("/{id}/profile")
-    public UserProfileResponse getProfile(
+    public ProfileResponse getProfile(
             @PathVariable Integer id
     ) {
-        return userService.showProfile(id);
+        User user = userService.showProfile(id);
+        List<ProfileResponse.ContactDto> contactDtos = user.getContactList().stream()
+                .map(contact -> {
+                    ProfileResponse.ContactDto dto = new ProfileResponse.ContactDto();
+                    dto.setContactName(contact.getContactName());
+                    return dto;
+                })
+                .toList();
+        return ProfileResponse.builder()
+                .name(user.getName())
+                .avatarUrl(user.getAvatarUrl())
+                .hideOnline(user.getHideOnline())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .contactDtoList(contactDtos)
+                .build();
     }
 
     @PutMapping("/{id}/profile")
-    public UserProfileResponse updateProfile(
+    public ProfileResponse updateProfile(
             @PathVariable Integer id,
             @RequestBody UpdateProfileRequest request
     ) {
-        return userService.updateProfile(id,request);
+        User user = userService.updateProfile(id,request);
+        return ProfileResponse.builder()
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .name(user.getName())
+                .avatarUrl(user.getAvatarUrl())
+                .build();
     }
 
     @PutMapping("/{id}/privacy")
-    public User updatePrivacy(
+    public UserResponseDTO updatePrivacy(
             @PathVariable Integer id,
             @RequestParam boolean hideOnline,
             @RequestParam boolean hideLastSeen
     ) {
-        return userService.updatePrivacy(id, hideOnline, hideLastSeen);
+        User user = userService.updatePrivacy(id, hideOnline, hideLastSeen);
+        return UserResponseDTO.builder()
+                .userId(user.getUserId())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
+                .name(user.getName())
+                .build();
+    }
+
+    /* Delete */
+
+    @PostMapping("/delete")
+    public UserResponseDTO deleteAccount(@PathVariable Integer userId){
+        User user = userService.deleteAccountById(userId);
+        return UserResponseDTO.builder()
+                .userId(user.getUserId())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
+                .name(user.getName())
+                .build();
     }
 }
